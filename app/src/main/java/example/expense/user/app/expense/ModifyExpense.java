@@ -202,9 +202,12 @@ public class ModifyExpense extends AppCompatActivity implements onNetworkRespons
             spinnerList = new AccountTitleSpinnerList(array);
             ArrayAdapter<String> adapter = new ArrayAdapter<>(ModifyExpense.this, android.R.layout.simple_spinner_item, spinnerList.getArrayList());
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            spnAccountTitle.setSelection(response.getInt("ADMISSION_STATUS_CD"));
+
             spnAccountTitle.setAdapter(adapter);
+            spnAccountTitle.setSelection(response.getInt("ADMISSION_STATUS_CD"));
         }else if(api_key.equals("EXPENSE_U001")){
+            Toast.makeText(ModifyExpense.this, "수정이 완료되었습니다.", Toast.LENGTH_SHORT).show();
+            finish();
 
         }else if(api_key.equals("EXPENSE_R001")){
             EditText paymentStoreNm = (EditText) findViewById(R.id.et_PaymentStoreName);
