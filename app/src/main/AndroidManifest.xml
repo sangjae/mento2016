@@ -39,6 +39,11 @@
             android:theme="@style/AppTheme">
 
         </activity>
+
+        <!-- 경비수정하기 -->
+        <activity android:name=".expense.ModifyExpense">
+
+        </activity>
     </application>
 
 </manifest>
