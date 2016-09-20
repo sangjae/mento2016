@@ -27,7 +27,6 @@ public class SharedPref {
         return pref.getString(key, defaultVal);
     }
 
-
     public static void putUserId(Context context, String userId) {
         setString(context, "USER_ID", userId);
     }
@@ -43,5 +42,4 @@ public class SharedPref {
     public static String getPwd(Context context) {
         return getString(context, "PWD", "");
     }
-
 }

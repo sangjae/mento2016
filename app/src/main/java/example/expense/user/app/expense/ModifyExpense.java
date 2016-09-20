@@ -45,6 +45,8 @@ public class ModifyExpense extends AppCompatActivity implements onNetworkRespons
     AccountTitleSpinnerList spinnerList;
     String seqJson;
     String seq;
+    public static String selectYear, selectMonth, selectDay;
+    String selectTTLCd;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -59,12 +61,13 @@ public class ModifyExpense extends AppCompatActivity implements onNetworkRespons
 
         CommNetwork network = new CommNetwork(this, this);
         try {
-            spnAccountTitle = (Spinner)findViewById(R.id.spn_AccountTitle);
-            getAccounttitleCodes();
+
             addToolBar();
             JSONObject object = new JSONObject(seqJson);
 
             network.requestToServer("EXPENSE_R001", object);
+
+
 
             etPaymentDate = (EditText) findViewById(R.id.et_PaymentDate);
             // 클릭시 데이트피커 보여주기
@@ -74,7 +77,6 @@ public class ModifyExpense extends AppCompatActivity implements onNetworkRespons
                     showDatePickerDialog(v);
                 }
             });
-
 
 
         } catch (Exception e) {
@@ -144,8 +146,8 @@ public class ModifyExpense extends AppCompatActivity implements onNetworkRespons
             /*
             *  로그
             */
-            Log.d("sangjaeDateTest","년 : "+etPaymentDate.getTag(R.id.tag_year).toString()+"월 : "+((Integer)etPaymentDate.getTag(R.id.tag_month) + 1)+"일 : "+etPaymentDate.getTag(R.id.tag_day));
-            requestObject.put("PAYMENT_DTTM", String.format("%04d%02d%02d", etPaymentDate.getTag(R.id.tag_year), ((Integer)etPaymentDate.getTag(R.id.tag_month) + 1), etPaymentDate.getTag(R.id.tag_day)));
+            //Log.d("sangjaeDateTest","년 : "+etPaymentDate.getTag(R.id.tag_year).toString()+" 월 : "+((Integer)etPaymentDate.getTag(R.id.tag_month))+" 일 : "+etPaymentDate.getTag(R.id.tag_day));
+            requestObject.put("PAYMENT_DTTM", String.format("%4s%02d%2s", etPaymentDate.getTag(R.id.tag_year), ((Integer)etPaymentDate.getTag(R.id.tag_month)), etPaymentDate.getTag(R.id.tag_day)));
             requestObject.put("SUMMARY", summary.getText().toString());
             requestObject.put("ACCOUNT_TTL_CD", spinnerList.getAccountTitleCd(spnAccountTitle.getSelectedItemPosition()));
             requestObject.put("USER_ID", SharedPref.getUserId(this));
@@ -170,12 +172,20 @@ public class ModifyExpense extends AppCompatActivity implements onNetworkRespons
             if (etPaymentDate.getTag(R.id.tag_year) == null) {
                 // Use the current date as the default date in the picker
                 final Calendar c = Calendar.getInstance();
+//                year = Integer.parseInt(selectYear);
+//                month = Integer.parseInt(selectMonth);
+//                day = Integer.parseInt(selectDay);
+
                 year = c.get(Calendar.YEAR);
                 month = c.get(Calendar.MONTH);
                 day = c.get(Calendar.DAY_OF_MONTH);
+                //creat Tag because modify
+//                etPaymentDate.setTag(R.id.tag_year, year);
+//                etPaymentDate.setTag(R.id.tag_month, month);
+//                etPaymentDate.setTag(R.id.tag_day, day);
             } else {
                 year = (Integer) etPaymentDate.getTag(R.id.tag_year);
-                month = (Integer) etPaymentDate.getTag(R.id.tag_month);
+                month = (Integer) etPaymentDate.getTag(R.id.tag_month) - 1;
                 day = (Integer) etPaymentDate.getTag(R.id.tag_day);
             }
 
@@ -188,13 +198,14 @@ public class ModifyExpense extends AppCompatActivity implements onNetworkRespons
             String date = String.format("%04d년 %2d월 %2d일", year, month + 1, day);
             etPaymentDate.setText(date);
             etPaymentDate.setTag(R.id.tag_year, year);
-            etPaymentDate.setTag(R.id.tag_month, month);
+            etPaymentDate.setTag(R.id.tag_month, month+1);
             etPaymentDate.setTag(R.id.tag_day, day);
         }
     }
 
     @Override
     public void onSuccess(String api_key, JSONObject response) {
+
         try {
 
         if(api_key.equals("ACCOUNT_L001")){
@@ -204,7 +215,15 @@ public class ModifyExpense extends AppCompatActivity implements onNetworkRespons
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
             spnAccountTitle.setAdapter(adapter);
-            spnAccountTitle.setSelection(response.getInt("ADMISSION_STATUS_CD"));
+
+            for(int i=0; i< spnAccountTitle.getCount(); i++){
+
+                if(spinnerList.getAccountTitleCd(i).equals(selectTTLCd)){
+                    spnAccountTitle.setSelection(i);
+                }
+            }
+
+
         }else if(api_key.equals("EXPENSE_U001")){
             Toast.makeText(ModifyExpense.this, "수정이 완료되었습니다.", Toast.LENGTH_SHORT).show();
             finish();
@@ -214,8 +233,11 @@ public class ModifyExpense extends AppCompatActivity implements onNetworkRespons
             EditText paymentAmount = (EditText) findViewById(R.id.et_PaymentAmount);
             EditText summary = (EditText) findViewById(R.id.et_Summary);
             EditText paymentDate = (EditText) findViewById(R.id.et_PaymentDate);
-            //spnAccountTitle.setSelection(response.getInt("ADMISSION_STATUS_CD"));
 
+            selectTTLCd = response.getString("ACCOUNT_TTL_CD");
+
+            spnAccountTitle = (Spinner)findViewById(R.id.spn_AccountTitle);
+            getAccounttitleCodes();
 
             ImageView iv_ReceiptPhoto = (ImageView) findViewById(R.id.iv_ReceiptPhoto);
 
@@ -224,9 +246,24 @@ public class ModifyExpense extends AppCompatActivity implements onNetworkRespons
             summary.setText(response.getString("SUMMARY"));
             String dateString = response.getString("PAYMENT_DTTM");
             paymentDate.setText( String.format("%4s년 %2s월 %2s일", dateString.substring(0, 4), dateString.substring(4, 6), dateString.substring(6, 8)));
-            //영수증 이미지불러오기
-            String path = response.getString("RECEIPT_PHOTO").replace("\\","");
-            Glide.with(this).load(path).into(iv_ReceiptPhoto);
+            //Dialog need parameter
+            selectYear = dateString.substring(0, 4);
+            selectMonth = dateString.substring(4, 6);
+            selectDay = dateString.substring(6, 8);
+
+            //creat Tag because modify
+            etPaymentDate.setTag(R.id.tag_year, Integer.parseInt(dateString.substring(0, 4)));
+            etPaymentDate.setTag(R.id.tag_month, Integer.parseInt(dateString.substring(4, 6)));
+            etPaymentDate.setTag(R.id.tag_day, Integer.parseInt(dateString.substring(6, 8)));
+
+            Log.d("@@@@", String.valueOf(etPaymentDate.getTag(R.id.tag_month)));
+
+
+//TODO:영수증이미지 처리하기
+//            //영수증 이미지불러오기
+//            String path = response.getString("RECEIPT_PHOTO").replace("\\","");
+//            Glide.with(this).load(path).into(iv_ReceiptPhoto);
+//
         }
 
 

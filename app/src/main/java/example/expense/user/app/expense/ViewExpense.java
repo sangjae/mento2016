@@ -62,6 +62,33 @@ public class ViewExpense extends AppCompatActivity implements onNetworkResponseL
         }
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        try {
+            setContentView(R.layout.content_view_expense);
+
+            Intent intent = getIntent();
+            seq = intent.getStringExtra("EXPENSE_SEQ");
+
+            Log.d("sangjaeGetTest",intent.getStringExtra("EXPENSE_SEQ"));
+
+            CommNetwork net = new CommNetwork(this, this);
+            JSONObject obj = new JSONObject();
+
+
+            obj.put("EXPENSE_SEQ", seq);
+            objJSONObject = obj.toString();
+            net.requestToServer("EXPENSE_R001", obj);
+
+
+            addToolBar();
+        }  catch (Exception e) {
+            ErrorUtils.AlertException(this, getString(R.string.error_msg_default_with_activity), e);
+        }
+    }
+
     private void addToolBar() throws Exception {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolBar);
         toolbar.setTitle(R.string.text_detail_view);
